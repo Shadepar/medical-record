@@ -1,2 +1,4 @@
 *.pem
 *.pub
+__pycache__/
+venv/
