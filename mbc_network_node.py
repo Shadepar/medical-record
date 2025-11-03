@@ -27,6 +27,19 @@ class HospitalNode:
         self.certs_dir = Path("certs")
         
         self.app = Flask(__name__)
+
+        @self.app.template_filter('to_datetime')
+        def format_timestamp(timestamp):
+            """Converts a UNIX timestamp to a readable string."""
+            if timestamp == 0:
+                # Special case for the Genesis Block
+                return "1970-01-01 00:00:00 (Genesis)"
+            try:
+                dt = datetime.fromtimestamp(timestamp)
+                return dt.strftime('%Y-%m-%d %H:%M:%S')
+            except (ValueError, TypeError):
+                return "Invalid Timestamp"
+
         self.blockchain = Blockchain(self)
         self.lock = Lock()
         

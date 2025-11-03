@@ -22,7 +22,6 @@
         h1 { font-size: 2.5em; }
         h2 { font-size: 1.5em; }
 
-        /* --- NEW Table Styles --- */
         table {
             width: 100%;
             border-collapse: collapse;
@@ -52,11 +51,10 @@
             padding: 2px 4px;
             border-radius: 4px;
         }
-        /* --- End Table Styles --- */
 
         .chain-container {
             display: flex;
-            flex-direction: column-reverse; /* Shows newest block on top */
+            flex-direction: column-reverse;
         }
         .block {
             background-color: #fff;
@@ -136,7 +134,9 @@
             {% for block in blocks %}
             <tr>
                 <td><strong>{{ block.index }}</strong></td>
-                <td>{{ block.timestamp }}</td>
+
+                <td>{{ block.timestamp | to_datetime }}</td>
+
                 <td>{{ block.patient }}</td>
                 <td>{{ block.proposer }}</td>
                 <td>{{ block.transactions | length }}</td>
@@ -161,7 +161,9 @@
             </h3>
             
             <div class="block-meta">
-                <strong>Timestamp:</strong> {{ block.timestamp }} <br>
+
+                <strong>Timestamp:</strong> {{ block.timestamp | to_datetime }} <br>
+
                 <strong>Patient:</strong> {{ block.patient }} <br>
                 <strong>Nonce:</strong> {{ block.nonce }}
             </div>
@@ -170,7 +172,7 @@
             <div class="hash">{{ block.previous_hash }}</div>
             
             <span class="hash-label">Block Hash:</span>
-            <div class="hash" style="background: #e6ffed; border-color: #b3f7c9;">{{ block.hash }}</div>
+            <div class.hash" style="background: #e6ffed; border-color: #b3f7c9;">{{ block.hash }}</div>
             
             <span class="hash-label">Transactions ({{ block.transactions | length }}):</span>
             <pre>{{ block.transactions | tojson(indent=2) }}</pre>

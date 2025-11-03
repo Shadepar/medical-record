@@ -7,6 +7,7 @@ import time
 from pprint import pprint
 import requests
 from threading import Thread
+from datetime import datetime
 
 # --- Consensus Timeout (in seconds) ---
 CONSENSUS_TIMEOUT = 30 # 30 seconds
@@ -53,7 +54,6 @@ class Blockchain:
         # --- PoW Logic ---
         i = 0
         while True:
-            # proposed_block['nonce'] = i
             block_copy['nonce'] = i
             block_string = json.dumps(block_copy, sort_keys=True).encode('utf-8')
             _hash = hashlib.sha256(block_string).hexdigest()
