@@ -150,8 +150,6 @@ class Blockchain:
             'block': proposed_block,
             'start_time': time.time()
         }
-        # --- END FIX ---
-
         # Sign the proposed block
         signature = crypto.sign_data(self.node.private_key, proposed_block['hash'])
         
@@ -600,7 +598,7 @@ class HospitalNode:
                 else:
                     pass 
         
-        # --- NEW GOSSIP PROTOCOL ---
+        # --- GOSSIP PROTOCOL ---
         # If this was a new peer, tell everyone else about them.
         if is_new_peer:
             print(f"[Gossip] Broadcasting new peer info for {node_id} to all other peers...")

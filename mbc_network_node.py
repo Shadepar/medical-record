@@ -4,7 +4,6 @@ import mbc_crypto as crypto
 import json
 import time
 from pathlib import Path
-from pprint import pprint
 from flask import Flask, request, jsonify
 import requests
 from threading import Thread, Lock
@@ -32,7 +31,7 @@ class HospitalNode:
         self.lock = Lock()
         
         # Network Data
-        self.peer_registry = {} # On-Chain Registry (Slide 5)
+        self.peer_registry = {} # On-Chain Registry 
         self.peer_public_keys = {} # Public key cache
         
         # Load identity
@@ -57,7 +56,7 @@ class HospitalNode:
         with open(self.certs_dir / f"{self.node_id}.cert", "r") as f:
             return json.load(f)
 
-    # --- Protocol 1: OOB Handshake (Slide 3) ---
+    # --- Protocol 1: OOB Handshake ---
     def register_routes(self):
         self.app.add_url_rule("/handshake", "handshake", self.handle_handshake, methods=["POST"])
         self.app.add_url_rule("/add_registry", "add_registry", self.handle_add_registry, methods=["POST"])
@@ -104,8 +103,6 @@ class HospitalNode:
         
         # 3. Reply with OWN certificate
         
-        # --- FIX IS HERE ---
-        # We must also send our *entire* dictionary of known public keys
         with self.lock:
             public_keys_to_send = {
                 nid: crypto.serialize_public_key(key).decode('utf-8') 
@@ -116,15 +113,15 @@ class HospitalNode:
             "message": f"Handshake accepted by {self.node_id}",
             "certificate": self.certificate,
             "registry": self.peer_registry, # Send current registry
-            "public_keys": public_keys_to_send # <-- ADDED THIS LINE
+            "public_keys": public_keys_to_send
         }), 200
 
-    # --- Protocol 2: Peer Discovery (Slide 4, 5) ---
+    # --- Protocol 2: Peer Discovery ---
     
     def connect_to_bootstrap(self):
         """Contacts the bootstrap node(s) for OOB Handshake."""
         
-        # --- NEW: Iterate through bootstrap domains for HA ---
+        # --- Iterate through bootstrap domains for HA ---
         handshake_success = False
         bs_node_id = None # Store the ID of the node we sync with
         
@@ -168,7 +165,6 @@ class HospitalNode:
                     with self.lock:
                         self.peer_registry.update(data.get('registry', {}))
 
-                        # --- FIX IS HERE ---
                         # Load all public keys received from the bootstrap
                         received_keys = data.get('public_keys', {})
                         for node_id, pub_key_ssh in received_keys.items():
@@ -177,7 +173,6 @@ class HospitalNode:
                                 if node_id not in self.peer_public_keys:
                                     print(f"[Bootstrap] Learning key for {node_id} from bootstrap.")
                                     self.peer_public_keys[node_id] = crypto.load_public_key(pub_key_ssh.encode('utf-8'))
-                        # --- END OF FIX ---
 
                         # Add bootstrap to registry
                         if bs_node_id != self.node_id:
@@ -197,20 +192,15 @@ class HospitalNode:
         
         # After loop, check if we ever succeeded
         if handshake_success:
-            # --- NEW: PROACTIVE SYNC ---
+            # --- PROACTIVE SYNC ---
             # Now that we've connected, immediately sync our chain
-            # with the bootstrap node *before* we come online.
             print(f"--- Proactively syncing chain with {bs_node_id} ---")
-            # We call this synchronously (not in a thread)
             self.resolve_conflicts(bs_node_id) 
-            # --- END PROACTIVE SYNC ---
             
             # Now we can broadcast our registry entry
             self.broadcast_registry_entry()
         else:
             print("!! FATAL: Could not connect to any bootstrap nodes. Shutting down.")
-            # In a real app, you'd have retry logic
-            # For this simulation, we'll just stop the thread.
             return
 
     def broadcast_registry_entry(self):
@@ -258,13 +248,12 @@ class HospitalNode:
                 else:
                     pass 
         
-        # --- NEW GOSSIP PROTOCOL ---
+        # --- GOSSIP PROTOCOL ---
         # If this was a new peer, tell everyone else about them.
         if is_new_peer:
             print(f"[Gossip] Broadcasting new peer info for {node_id} to all other peers...")
             # We re-broadcast the *original message* (data, not payload)
             self.broadcast_to_peers("/add_registry", data, exclude_node_id=node_id)
-        # --- END NEW GOSSIP PROTOCOL ---
                 
         return jsonify({"message": "Registry accepted"}), 200
 
@@ -285,7 +274,7 @@ class HospitalNode:
             except requests.exceptions.RequestException:
                 print(f"!! Failed to send to peer {node_id} at {address}")
                 
-    # --- Function for Fork Resolution (TODO #2) ---
+    # --- Function for Fork Resolution ---
     def validate_full_chain(self, chain):
         """Validates an entire blockchain received from a peer."""
         print("[Fork] Validating incoming chain...")
@@ -309,8 +298,6 @@ class HospitalNode:
             if _hash != block['hash'] or _hash[:self.blockchain.difficulty] != '0' * self.blockchain.difficulty:
                 print(f"[Fork] !! Validation Failed: Invalid PoW at index {i}.")
                 return False
-            
-            # TODO: Check PoA signatures (this is already implemented in commit_block)
             
         print("[Fork] Incoming chain is valid.")
         return True
@@ -401,13 +388,13 @@ class HospitalNode:
         if not patient or not record_data:
             return jsonify({"error": "'patient' and 'data' fields are required"}), 400
         
-        # --- NEW: Check for timed-out proposals first ---
+        # --- Check for timed-out proposals first ---
         with self.lock:
             self.blockchain.check_for_failed_proposal()
             
         # Create transaction
         tx = {
-            "timestamp": int(time.time()), # <-- FIX: Use integer timestamp
+            "timestamp": int(time.time()), 
             "patient": patient,
             "data": record_data,
             "node_id": self.node_id
@@ -422,7 +409,7 @@ class HospitalNode:
         with self.lock:
             self.blockchain.pending_transactions.append(full_tx)
         
-        # --- NEW LOGIC: Automatically start mining ---
+        # --- Automatically start mining ---
         with self.lock:
             if not self.blockchain.pending_transactions:
                 return jsonify({"message": "No transactions to mine"}), 400 # Should not happen
@@ -440,7 +427,7 @@ class HospitalNode:
         return jsonify({"message": "Block proposal started"}), 202
         
     def run(self):
-        # --- MODIFICATION: Run connect_to_bootstrap *before* starting the server ---
+        # --- Run connect_to_bootstrap *before* starting the server ---
         if self.bootstrap_domains:
             # This is NOT a primary bootstrap node.
             # We must connect and sync *before* starting the server.
@@ -449,5 +436,5 @@ class HospitalNode:
         
         print("\n--- Node is online and ready. ---")
             
-        # FIX: Add threaded=True to prevent deadlocks
+        # Add threaded=True to prevent deadlocks
         self.app.run(port=self.port, host="0.0.0.0", threaded=True)
