@@ -9,6 +9,7 @@ import requests
 from threading import Thread, Lock
 
 from mbc_blockchain import Blockchain
+from datetime import datetime
 
 # --- Simulated DNS for Bootstrap Domains ---
 SIMULATED_DNS = {
