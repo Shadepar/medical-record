@@ -22,7 +22,7 @@ Your project folder must contain these four Python files:
 1.  `mbc_ca.py`: **(Certificate Authority)** Run *once* to generate all keys and certificates.
 2.  `mbc_crypto.py`: **(Crypto Library)** Imported by other scripts. Do not run directly.
 3.  `mbc_node.py`: **(Node Program)** The main code for a single hospital node.
-4.  `run_simulation.py`: **(Launcher Script)** Starts the 5-node simulation.
+4.  `mbc_launcher.py`: **(Launcher Script)** Starts the 5-node simulation.
 
 ## 3. Phase 1: Setup (Run Once)
 
@@ -78,13 +78,16 @@ Now you will propose a new block. The system is designed so you can send the req
 
 If you are on Windows (Command Prompt):
 ```bash
-curl -X POST [http://127.0.0.1:5003/add_record](http://127.0.0.1:5003/add_record) -H "Content-Type: application/json" -d "{\"patient\": \"Alice\", \"data\": \"High Fever\"}"
+curl -X POST http://127.0.0.1:5003/add_record -H "Content-Type: application/json" -d "{\"patient\": \"Alice\", \"data\": \"High Fever\"}"
 ```
 
 If you are on macOS or Linux (Bash):
 ```bash
 curl -X POST http://127.0.0.1:5003/add_record -H 'Content-Type: application/json' -d '{"patient": "Alice", "data": "High Fever"}'
 ```
+
+Or you can just visit: http://127.0.0.1:5003/add_record to add a new block, (the port could be 5001, 5002, 5003, 5004, 5005).
+
 * Expected Output (Watch all 5 node terminals):
 
 1. RS-3 Terminal: Will log `API: /add_record triggered...`, then `[Proposer] Starting Proof-of-Work....` It will print `PoW...` until it finds a valid hash.
@@ -103,8 +106,11 @@ At any time, you can inspect the full blockchain from any node.
 2. Run the following `curl` command. You can use the port of any running node (e.g., 5001, 5002, 5003, 5004, or 5005).
 
 ```bash
-curl [http://127.0.0.1:5001/chain](http://127.0.0.1:5001/chain)
+curl http://127.0.0.1:5001/chain
 ```
+
+Or you can just visit: http://127.0.0.1:5003/add_record to view blocks in the blockchain, (the port could be 5001, 5002, 5003, 5004, 5005).
+
 * Expected Output: Your terminal will print a large JSON array of all the blocks in the chain, starting from the Genesis block. This is useful for verifying that a re-joined node has successfully synced.
 
 ## 7. Advanced Test 1: Node Re-join (New Port)
